@@ -1,0 +1,25 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "concurrently": "^5.0.2",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.6",
+    "helmet-csp": "^2.9.4",
+    "iconv-lite": "^0.5.0",
+    "nodemon": "^2.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "server": "nodemon index.js",
+    "app": "npm start --prefix ../app",
+    "dev": "concurrently \"npm run server\" \"npm run app\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
