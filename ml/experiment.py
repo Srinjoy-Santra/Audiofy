@@ -1,16 +1,37 @@
-from playsound import playsound
-import matplotlib.pyplot as plt
+import torch
+import numpy as np
+import scipy
 import librosa
+import youtube_dl
+import os
+import soundfile as sf
+from IPython.display import Audio, display
 
-audio_path = r'../app/public/uploads/Starset_-_Telescope_(audio)-9vjewxPHq9I.mp3'
+#os.chdir('open-unmix-pytorch')
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda" if use_cuda else "cpu")
+print(use_cuda, device)
 
-# display Spectrogram
-X = librosa.stft(x)
-Xdb = librosa.amplitude_to_db(abs(X))
-plt.figure(figsize=(14, 5))
-librosa.display.specshow(Xdb, sr=sr, x_axis='time', y_axis='hz')
-# If to pring log of frequencies
-# librosa.display.specshow(Xdb, sr=sr, x_axis='time', y_axis='log')
-plt.colorbar()
+from open_unmix_pytorch import my_test
 
-playsound(audio_path)
+start =   31 #@param {type:"number"}
+stop = 60 #@param {type:"number"}
+audio, rate = librosa.load(
+    r'Z:\Music\PyMusic\Avicii - Wake Me Up (Official Video)-IcrbM1l_BoI.mp3',
+    sr=44100,
+    offset=start,
+    duration=stop-start,
+    #mono=False
+)
+display(Audio(audio, rate=rate))
+estimates = my_test.separate(
+    audio=audio.T,
+    targets=['vocals', 'drums', 'bass', 'other'],
+    residual_model=False,
+    device=device,
+    niter=1
+)
+for target, estimate in estimates.items():
+    sf.write(target + '.wav', estimate, rate, subtype='PCM_16')
+    
+print(estimates.items())
