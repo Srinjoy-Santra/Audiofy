@@ -8,6 +8,7 @@
     "@material-ui/lab": "^4.0.0-alpha.39",
     "axios": "^0.19.1",
     "react": "^16.10.2",
+    "react-audio-visualizer": "^1.0.3",
     "react-dom": "^16.10.2",
     "react-scripts": "^3.3.0",
     "wavesurfer.js": "^3.3.1"
