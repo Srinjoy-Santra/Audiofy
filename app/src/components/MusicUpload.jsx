@@ -1,27 +1,22 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
 import axios from 'axios'
 import { makeStyles } from '@material-ui/core/styles';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Skeleton from '@material-ui/lab/Skeleton';
-import SnackBar from './SnackBar';
-import { MySnackbarContentWrapper } from './SnackBar';
-import MuiAlert from '@material-ui/lab/Alert';
-import Snackbar from '@material-ui/core/Snackbar';
-import { Grid, Paper } from '@material-ui/core';
-
-function Alert(props) {
-    return <MuiAlert elevation={6} variant="filled" {...props} />;
-  }
+import Grid from '@material-ui/core/Grid';
+import Paper from '@material-ui/core/Paper';
 
 const useStyles = makeStyles(theme => ({
     margin: {
-      margin: theme.spacing(1),
+        margin: theme.spacing(1),
     },
     progress: {
         width: '100%',
         '& > * + *': {
-          marginTop: theme.spacing(2),
+            marginTop: theme.spacing(2),
         },
+        margin: theme.spacing(1),
+        padding: theme.spacing(1),
     },
     root: {
         flexGrow: 1,
@@ -37,30 +32,24 @@ const useStyles = makeStyles(theme => ({
         margin: 'auto',
         borderRadius: 50,
     }
-  }));
+}));
 
-export const MusicUpload = () => {
-    
+export const MusicUpload = (props) => {
+
     const classes = useStyles();
     const [file, setFile] = useState(null)
     const [fileName, setFileName] = useState('Select File')
+    console.log(props.selectedMusic)
     const [uploadedFile, setUploadedFile] = useState({});
-    const [uploadPercentage, setUploadPercentage] = useState(0);   
-    const [message, setMessage] = useState('No file chosen');
-    const [snackbarVariant, setSnackbarVariant] = useState('warning');
-    const [openSnackbar, setOpenSnackbar] = React.useState(false);
+    const [uploadPercentage, setUploadPercentage] = useState(0);
 
-    const handleSnackbarClick = () => {
-      setOpenSnackbar(true);
-    };
-  
-    const handleSnackbarClose = (event, reason) => {
-      if (reason === 'clickaway') {
-        return;
-      }
-  
-      setOpenSnackbar(false);
-    };
+    useEffect(() => {
+        props.selectedMusic &&
+            setUploadedFile({
+                fileName: props.selectedMusic,
+                filePath: '/uploads/' + props.selectedMusic
+            })
+    }, [props.selectedMusic])
 
     const onChange = (e) => {
         setFile(e.target.files[0])
@@ -72,88 +61,81 @@ export const MusicUpload = () => {
         const formData = new FormData()
         formData.append('file', file)
 
-        try{
-            
+        try {
+
             const res = await axios.post('/upload', formData, {
                 headers: {
                     'Content-Type': 'multiport/form-data'
                 },
                 onUploadProgress: progressEvent => {
-                    if(file)
-                    setUploadPercentage(parseInt(Math.round((progressEvent.loaded * 100) / progressEvent.total)))
-                
+                    if (file)
+                        setUploadPercentage(parseInt(Math.round((progressEvent.loaded * 100) / progressEvent.total)))
+
                     setTimeout(() => setUploadPercentage(0), 10000);
                 }
 
             })
 
             const { fileName, filePath } = res.data
-            setUploadedFile({fileName, filePath})
-            setMessage('File uploaded successfully!')
-            setSnackbarVariant('success')
-            handleSnackbarClick()
+            setUploadedFile({ fileName, filePath })
+            props.setMessage('File uploaded successfully!')
+            props.setSnackbarVariant('success')
         }
-        catch(err){
-            if(err.response)
-                if(err.response.status === 500)
-                    setMessage('Problem with server');
-                else setMessage(err.response.data.msg);
-            else setMessage('Unexpected Benhavior')
-            handleSnackbarClick('error')       
+        catch (err) {
+            if (err.response)
+                if (err.response.status === 500)
+                    props.setMessage('Problem with server');
+                else props.setMessage(err.response.data.msg);
+            else props.setMessage('Unexpected Benhavior')
+            props.setSnackbarVariant('error')
+
         }
+        props.handleSnackbarClick()
     }
 
     return (
         <Fragment >
-           
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={5} component={Paper} className={classes.paper}>
                     <form onSubmit={onSubmit}>
                         <Grid container>
                             <Grid item xs={12}>
-                                <input type="file" id="customFile" onChange={onChange}/>
+                                <LinearProgress variant="determinate" value={uploadPercentage}
+                                    color='secondary' />
+                                <p>{uploadPercentage}%</p>
                             </Grid>
                             <Grid item xs={12}>
-                                <label htmlFor="customFile">{fileName}</label> 
+                                <input type="file" id="customFile" onChange={onChange} />
                             </Grid>
                             <Grid item xs={12}>
-                                <input type="submit" value="Upload"/>
+                                <label htmlFor="customFile">{fileName}</label>
+                            </Grid>
+                            <Grid item xs={12}>
+                                <input type="submit" value="Upload" />
                             </Grid>
                         </Grid>
                     </form>
-                </Grid> 
-                <Grid item xs={12} sm={5} component={Paper} className={classes.paper}>
-                    <LinearProgress variant="determinate" value={uploadPercentage} />
-                    <p>{uploadPercentage}%</p>
-                    <Fragment>
-                    {
-                    uploadedFile.filePath ?
-                    (
-                        <audio controls >
-                            <source src={uploadedFile.filePath} type="audio/mpeg"/>
-                        </audio>
-                    )
-                    :
-                    (
-                        <Skeleton variant="rect" className={classes.skeleton} width={300} height={50}/>
-                    )
-                    }
-                    </Fragment>   
                 </Grid>
-            </Grid>            
-            {console.log(uploadedFile.filePath, decodeURIComponent(uploadedFile.filePath))}
-
-            {
-            <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleSnackbarClose}
-                anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-                }}>
-                <Alert onClose={handleSnackbarClose} severity={snackbarVariant}>
-                    {message}
-                </Alert>
-            </Snackbar>
-            }
+                <Grid item xs={12} sm={5} component={Paper} className={classes.paper}>
+                    <Fragment>
+                        {
+                            uploadedFile.filePath ?
+                                (
+                                    <div key={props.selectedMusic}>
+                                        <audio controls>
+                                            <source src={uploadedFile.filePath} type="audio/mpeg" />
+                                        </audio>
+                                    </div>
+                                )
+                                :
+                                (
+                                    <Skeleton variant="rect" className={classes.skeleton} width={300} height={50} />
+                                )
+                        }
+                    </Fragment>
+                </Grid>
+            </Grid>
+            {console.log(':', uploadedFile, uploadedFile.filePath)}
         </Fragment>
     )
 }
