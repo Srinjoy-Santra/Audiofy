@@ -23,6 +23,7 @@ import VocalsExtract from './components/VocalsExtract';
 import MusicVisuaizer from './components/MusicVisualizer';
 import MusicPlayer from './components/MusicPlayer';
 import MusicSlider from './components/MusicSlider';
+import Main from './pages/Main';
 
 function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />;
